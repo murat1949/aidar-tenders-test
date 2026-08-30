@@ -310,27 +310,20 @@ function openDetail(i){
 }
 function closeDetail(){document.getElementById("detailModal").classList.remove("open")}
 
-async function updateSamruk(){
+function updateSamruk(){
  const b=document.getElementById("samrukBtn");
  const oldText=b.textContent;
  b.disabled=true;
- b.textContent="Samruk: обновляю…";
- try{
-   const r=await fetch("http://127.0.0.1:8765/update-samruk");
-   const raw=await r.text();
-   let x={};
-   try{x=JSON.parse(raw)}catch(_){throw new Error("bridge вернул: "+raw.slice(0,180))}
-   if(!r.ok || x.ok===false) throw new Error(x.error||("HTTP "+r.status));
-   const rows=(x.rows ?? x.inserted ?? x.count ?? 0);
-   b.textContent="Samruk: "+rows+" загружено";
-   await loadAll();
- }catch(e){
-   console.error(e);
-   b.textContent="Samruk: ошибка";
-   alert("Samruk: "+e.message+"\n\nНужно, чтобы на этом компьютере был запущен локальный bridge на 127.0.0.1:8765 и открыт авторизованный Samruk.");
- }finally{
-   setTimeout(()=>{b.disabled=false;b.textContent=oldText},5000);
+ b.textContent="Samruk: запускаю…";
+ const w=window.open("http://127.0.0.1:8765/update-samruk","samruk_bridge");
+ if(!w){
+   alert("Браузер заблокировал открытие локального bridge. Разрешите всплывающее окно для этого сайта.");
  }
+ setTimeout(async ()=>{
+   try{ await loadAll(); }catch(e){ console.error(e); }
+   b.disabled=false;
+   b.textContent=oldText;
+ },3000);
 }
 
 if(getKey()){closeSetup();loadAll()}else{setConn("Нужен public key","warn")}
