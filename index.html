@@ -62,6 +62,7 @@ td:first-child{border-left:1px solid #edf0f5;border-radius:11px 0 0 11px}td:last
  <div class="brand"><div class="logo">P</div><div><h1>ProcureVision KZ</h1><p>Живая лента закупок из Supabase</p></div></div>
  <div class="actions">
    <span id="connBadge" class="badge warn">База не подключена</span>
+   <button id="samrukBtn" class="btn soft" onclick="updateSamruk()">Обновить Samruk</button>
    <button class="btn soft" onclick="openSetup()">Настройка базы</button>
    <button class="btn primary" onclick="loadAll()">Обновить</button>
  </div>
@@ -308,6 +309,29 @@ function openDetail(i){
  document.getElementById("detailModal").classList.add("open");
 }
 function closeDetail(){document.getElementById("detailModal").classList.remove("open")}
+
+async function updateSamruk(){
+ const b=document.getElementById("samrukBtn");
+ const oldText=b.textContent;
+ b.disabled=true;
+ b.textContent="Samruk: обновляю…";
+ try{
+   const r=await fetch("http://127.0.0.1:8765/update-samruk");
+   const raw=await r.text();
+   let x={};
+   try{x=JSON.parse(raw)}catch(_){throw new Error("bridge вернул: "+raw.slice(0,180))}
+   if(!r.ok || x.ok===false) throw new Error(x.error||("HTTP "+r.status));
+   const rows=(x.rows ?? x.inserted ?? x.count ?? 0);
+   b.textContent="Samruk: "+rows+" загружено";
+   await loadAll();
+ }catch(e){
+   console.error(e);
+   b.textContent="Samruk: ошибка";
+   alert("Samruk: "+e.message+"\n\nНужно, чтобы на этом компьютере был запущен локальный bridge на 127.0.0.1:8765 и открыт авторизованный Samruk.");
+ }finally{
+   setTimeout(()=>{b.disabled=false;b.textContent=oldText},5000);
+ }
+}
 
 if(getKey()){closeSetup();loadAll()}else{setConn("Нужен public key","warn")}
 </script>
