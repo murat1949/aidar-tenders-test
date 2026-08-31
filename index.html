@@ -215,7 +215,7 @@ async function loadAll(){
    const rows=[];
    let from=0, step=1000;
    while(true){
-     const url=SUPABASE_URL+"/rest/v1/tenders?select=id,source_code,source_tender_id,source_lot_id,public_url,title,description,customer_name,customer_bin,region,status_name,amount,currency,quantity,unit,published_at,started_at,expires_at,is_active&order=id.desc";
+     const url=SUPABASE_URL+"/rest/v1/tenders?select=id,source_code,source_tender_id,source_lot_id,public_url,title,description,customer_name,customer_bin,region,status_name,amount,currency,quantity,unit,published_at,started_at,expires_at,is_active,raw&order=id.desc";
      const r=await fetch(url,{headers:{
        "apikey":key,"Authorization":"Bearer "+key,"Range":from+"-"+(from+step-1),"Prefer":"count=exact"
      }});
