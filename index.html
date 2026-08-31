@@ -145,18 +145,9 @@ td:first-child{border-left:1px solid #edf0f5;border-radius:11px 0 0 11px}td:last
    <div class="detail full"><b>Описание</b><span id="mDesc"></span></div>
   </div>
   <div id="mTechSpec" class="techspec">
-   <h4>Техспецификация — проверено по официальному PDF</h4>
-   <div class="techspec-grid">
-    <div class="techspec-item"><b>Модель</b><span>HP LaserJet 5100 (C4129X)</span></div>
-    <div class="techspec-item"><b>Количество</b><span>2 шт.</span></div>
-    <div class="techspec-item"><b>Место поставки</b><span>Астана, ул. Д. Кунаева, 6</span></div>
-    <div class="techspec-item"><b>Условия поставки</b><span>DDP</span></div>
-    <div class="techspec-item"><b>Срок поставки</b><span>30 календарных дней после подписания договора</span></div>
-    <div class="techspec-item"><b>Оплата</b><span>0% аванс / 0% промежуточно / 100% окончательно</span></div>
-    <div class="techspec-item"><b>Оригинальность</b><span>Только оригинальная упаковка производителя</span></div>
-    <div class="techspec-item"><b>Не допускается</b><span>Б/у, восстановленные, модифицированные и совместимые товары</span></div>
-   </div>
-   <div class="techspec-note"><b>Дополнительно:</b> требуются документы о соответствии. Это первый контрольный лот для проверки отображения техспецификации в тестовой версии.</div>
+   <h4>Техспецификация — данные из Supabase</h4>
+   <div id="mTechSpecGrid" class="techspec-grid"></div>
+   <div id="mTechSpecNote" class="techspec-note"></div>
   </div>
   <div style="margin-top:13px"><a id="mLink" class="btn primary" style="display:inline-block;text-decoration:none" target="_blank">Открыть на площадке</a></div>
  </div>
@@ -328,9 +319,46 @@ function openDetail(i){
  document.getElementById("mAmount").textContent=fmtAmount(t.amount);
  document.getElementById("mDeadline").textContent=fmtDate(t.expires_at);
  document.getElementById("mDesc").textContent=t.description||"—";
+
  const tech=document.getElementById("mTechSpec");
- const lotId=String(t.source_lot_id||t.lot_id||"").trim();
- tech.style.display=(t.source_code==="samruk" && lotId==="4522943")?"block":"none";
+ const techGrid=document.getElementById("mTechSpecGrid");
+ const techNote=document.getElementById("mTechSpecNote");
+ const spec=(t.raw && typeof t.raw==="object") ? t.raw.techspec : null;
+
+ if(spec && typeof spec==="object"){
+   const pf=(spec.parsed_fields && typeof spec.parsed_fields==="object") ? spec.parsed_fields : {};
+   const items=[
+     ["Закупка", spec.procurement_no],
+     ["Лот", spec.lot_id],
+     ["Краткое описание", spec.short_description],
+     ["Количество", spec.quantity!=null ? String(spec.quantity)+(spec.unit ? " "+spec.unit : "") : null],
+     ["Место поставки", spec.delivery_place],
+     ["Условия поставки", spec.delivery_terms],
+     ["Срок поставки", spec.delivery_period],
+     ["Оплата", spec.payment_terms],
+     ["Тип / чернила", pf.ink_type],
+     ["Цвет", pf.color],
+     ["Совместимость", pf.compatibility],
+     ["Производительность / объём", pf.yield_or_volume],
+     ["Назначение", pf.purpose]
+   ].filter(x=>x[1]!==null && x[1]!==undefined && String(x[1]).trim()!=="");
+
+   techGrid.innerHTML=items.map(x =>
+     '<div class="techspec-item"><b>'+esc(x[0])+'</b><span>'+esc(String(x[1]))+'</span></div>'
+   ).join("");
+
+   const extras=[];
+   if(spec.additional_description) extras.push("<b>Доп. характеристика:</b> "+esc(spec.additional_description));
+   if(spec.technical_requirements) extras.push("<b>Технические требования:</b> "+esc(spec.technical_requirements));
+   if(spec.source_pdf) extras.push("<b>Источник:</b> "+esc(spec.source_pdf));
+   techNote.innerHTML=extras.join("<br><br>");
+   tech.style.display="block";
+ }else{
+   techGrid.innerHTML="";
+   techNote.innerHTML="";
+   tech.style.display="none";
+ }
+
  const a=document.getElementById("mLink");a.href=t.public_url||"#";a.style.display=t.public_url?"inline-block":"none";
  document.getElementById("detailModal").classList.add("open");
 }
