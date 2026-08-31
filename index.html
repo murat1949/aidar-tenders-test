@@ -54,6 +54,15 @@ td:first-child{border-left:1px solid #edf0f5;border-radius:11px 0 0 11px}td:last
 .pager{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:10px}.pager button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 10px;cursor:pointer}.pager button:disabled{opacity:.4}
 @media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}.hero{grid-template-columns:1fr}}
 @media(max-width:760px){.kpis{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr}.header{align-items:flex-start}.detail-grid{grid-template-columns:1fr}}
+
+.techspec{margin-top:14px;padding:14px;border:1px solid #cfe0ff;border-radius:14px;background:#f6f9ff;display:none}
+.techspec h4{margin:0 0 10px;font-size:16px}
+.techspec-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.techspec-item{background:#fff;border:1px solid #e4ebf7;border-radius:10px;padding:9px 10px}
+.techspec-item b{display:block;font-size:11px;color:#667085;margin-bottom:4px}
+.techspec-note{margin-top:10px;font-size:12px;line-height:1.45;color:#344054}
+@media(max-width:700px){.techspec-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -134,6 +143,20 @@ td:first-child{border-left:1px solid #edf0f5;border-radius:11px 0 0 11px}td:last
    <div class="detail"><b>Сумма</b><span id="mAmount"></span></div>
    <div class="detail"><b>Окончание</b><span id="mDeadline"></span></div>
    <div class="detail full"><b>Описание</b><span id="mDesc"></span></div>
+  </div>
+  <div id="mTechSpec" class="techspec">
+   <h4>Техспецификация — проверено по официальному PDF</h4>
+   <div class="techspec-grid">
+    <div class="techspec-item"><b>Модель</b><span>HP LaserJet 5100 (C4129X)</span></div>
+    <div class="techspec-item"><b>Количество</b><span>2 шт.</span></div>
+    <div class="techspec-item"><b>Место поставки</b><span>Астана, ул. Д. Кунаева, 6</span></div>
+    <div class="techspec-item"><b>Условия поставки</b><span>DDP</span></div>
+    <div class="techspec-item"><b>Срок поставки</b><span>30 календарных дней после подписания договора</span></div>
+    <div class="techspec-item"><b>Оплата</b><span>0% аванс / 0% промежуточно / 100% окончательно</span></div>
+    <div class="techspec-item"><b>Оригинальность</b><span>Только оригинальная упаковка производителя</span></div>
+    <div class="techspec-item"><b>Не допускается</b><span>Б/у, восстановленные, модифицированные и совместимые товары</span></div>
+   </div>
+   <div class="techspec-note"><b>Дополнительно:</b> требуются документы о соответствии. Это первый контрольный лот для проверки отображения техспецификации в тестовой версии.</div>
   </div>
   <div style="margin-top:13px"><a id="mLink" class="btn primary" style="display:inline-block;text-decoration:none" target="_blank">Открыть на площадке</a></div>
  </div>
@@ -305,6 +328,9 @@ function openDetail(i){
  document.getElementById("mAmount").textContent=fmtAmount(t.amount);
  document.getElementById("mDeadline").textContent=fmtDate(t.expires_at);
  document.getElementById("mDesc").textContent=t.description||"—";
+ const tech=document.getElementById("mTechSpec");
+ const lotId=String(t.source_lot_id||t.lot_id||"").trim();
+ tech.style.display=(t.source_code==="samruk" && lotId==="4522943")?"block":"none";
  const a=document.getElementById("mLink");a.href=t.public_url||"#";a.style.display=t.public_url?"inline-block":"none";
  document.getElementById("detailModal").classList.add("open");
 }
