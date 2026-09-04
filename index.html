@@ -65,6 +65,7 @@ td:first-child{border-left:1px solid #edf0f5;border-radius:11px 0 0 11px}td:last
 @media(max-width:700px){.techspec-grid{grid-template-columns:1fr}}
 
 </style>
+<!-- TEST10N: user-friendly Samruk error messages -->
 </head>
 <body>
 <div class="app">
@@ -405,10 +406,25 @@ async function updateSamruk(){
  }catch(e){
    console.error(e);
    const msg=String(e&&e.message?e.message:e);
+
    if(/Failed to fetch|NetworkError|Load failed/i.test(msg)){
-     showSamrukResult("Не удалось связаться с Samruk bridge. Проверьте, что запущен RUN_BRIDGE_TEST10M_OPERATIONAL.bat и открыт Collector Chrome.","bad");
+     showSamrukResult(
+       "Обновление Samruk сейчас не запущено. Откройте ярлык «Aidar Tenders — обновление Samruk» и повторите.",
+       "bad"
+     );
+   }else if(
+     /Не найден открытый Samruk в Chrome collector mode/i.test(msg) ||
+     /WinError\s*10061/i.test(msg) ||
+     /urlopen error/i.test(msg) ||
+     /connection refused/i.test(msg) ||
+     /отверг запрос на подключение/i.test(msg)
+   ){
+     showSamrukResult(
+       "Samruk не открыт. Откройте ярлык «Samruk для Aidar Tenders», войдите в систему и повторите обновление.",
+       "bad"
+     );
    }else{
-     showSamrukResult("Samruk: ошибка — "+msg,"bad");
+     showSamrukResult("Samruk не обновлён: "+msg,"bad");
    }
  }finally{
    b.disabled=false;
