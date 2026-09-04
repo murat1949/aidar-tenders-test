@@ -46,6 +46,7 @@ td:first-child{border-left:1px solid #edf0f5;border-radius:11px 0 0 11px}td:last
 .side-card{margin-bottom:12px}.side-card h4{margin:0 0 10px;font-size:15px}.side-card p{font-size:12px;color:#475569;line-height:1.45}
 .rowline{padding:9px 0;border-bottom:1px solid #edf0f5;font-size:12px}.rowline:last-child{border-bottom:0}
 .notice{display:none;background:#fff7df;border:1px solid #fde7a5;border-radius:14px;padding:12px;margin-bottom:14px;font-size:12px;color:#7c5b00}
+.samruk-result{display:none;border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:13px;font-weight:700;line-height:1.45}.samruk-result.info{display:block;background:#eef5ff;border:1px solid #cfe0ff;color:#1d4ed8}.samruk-result.ok{display:block;background:#ecfdf3;border:1px solid #bbf7d0;color:#166534}.samruk-result.bad{display:block;background:#fff0ed;border:1px solid #fecaca;color:#b42318}
 .modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.48);z-index:30;align-items:center;justify-content:center;padding:20px}.modal.open{display:flex}
 .modal-card{max-width:720px;width:100%;background:#fff;border-radius:20px;padding:21px;box-shadow:0 30px 80px rgba(0,0,0,.22)}
 .modal-top{display:flex;justify-content:space-between;gap:12px}.close{border:0;background:#f1f5f9;border-radius:10px;padding:8px 10px;cursor:pointer}
@@ -90,6 +91,7 @@ td:first-child{border-left:1px solid #edf0f5;border-radius:11px 0 0 11px}td:last
  <span class="source-chip"><span class="dot wait"></span>Samruk — авторизация</span>
 </div>
 
+<div id="samrukResult" class="samruk-result"></div>
 <div id="notice" class="notice"></div>
 
 <section class="kpis">
@@ -364,20 +366,54 @@ function openDetail(i){
 }
 function closeDetail(){document.getElementById("detailModal").classList.remove("open")}
 
-function updateSamruk(){
+function showSamrukResult(text,kind){
+ const n=document.getElementById("samrukResult");
+ n.className="samruk-result "+(kind||"info");
+ n.textContent=text;
+}
+async function updateSamruk(){
  const b=document.getElementById("samrukBtn");
  const oldText=b.textContent;
+ const beforeTotal=Array.isArray(allRows)?allRows.length:0;
  b.disabled=true;
- b.textContent="Samruk: запускаю…";
- const w=window.open("http://127.0.0.1:8765/update-samruk","samruk_bridge");
- if(!w){
-   alert("Браузер заблокировал открытие локального bridge. Разрешите всплывающее окно для этого сайта.");
- }
- setTimeout(async ()=>{
-   try{ await loadAll(); }catch(e){ console.error(e); }
+ b.textContent="Samruk: обновляю…";
+ showSamrukResult("Samruk: идёт обновление. Оставайтесь на этой странице — техническое окно больше не открывается.","info");
+ try{
+   const r=await fetch("http://127.0.0.1:8765/update-samruk?ts="+Date.now(),{
+     method:"GET",
+     cache:"no-store"
+   });
+   let data=null;
+   try{ data=await r.json(); }catch(_){}
+   if(!r.ok || !data || data.ok!==true){
+     const msg=(data&&data.message)?data.message:("HTTP "+r.status);
+     throw new Error(msg);
+   }
+
+   await loadAll();
+   const afterTotal=Array.isArray(allRows)?allRows.length:beforeTotal;
+   const added=Math.max(0,afterTotal-beforeTotal);
+   const tech=(data.auto_techspec_downloaded||0)+(data.auto_techspec_from_card||0);
+   const errors=(data.pending_errors||0)+(data.auto_techspec_errors||0);
+   showSamrukResult(
+     "Samruk готово. Проверено "+(data.rows||0)+
+     " · Новых "+added+
+     " · Техспек "+tech+
+     " · Ошибок "+errors,
+     errors?"bad":"ok"
+   );
+ }catch(e){
+   console.error(e);
+   const msg=String(e&&e.message?e.message:e);
+   if(/Failed to fetch|NetworkError|Load failed/i.test(msg)){
+     showSamrukResult("Не удалось связаться с Samruk bridge. Проверьте, что запущен RUN_BRIDGE_TEST10M_OPERATIONAL.bat и открыт Collector Chrome.","bad");
+   }else{
+     showSamrukResult("Samruk: ошибка — "+msg,"bad");
+   }
+ }finally{
    b.disabled=false;
    b.textContent=oldText;
- },3000);
+ }
 }
 
 if(getKey()){closeSetup();loadAll()}else{setConn("Нужен public key","warn")}
