@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Aidar Tenders / Samruk techspec extractor v1
+Aidar Tenders / Samruk techspec extractor v1.1 / TEST10L
 Usage:
     python extract_samruk_techspec.py "Lot_4521598_2026-08-26.pdf"
 
@@ -50,9 +50,16 @@ def extract_text(pdf_path):
 
 def russian_part(text):
     # Samruk PDFs are often bilingual: Kazakh first, Russian later.
-    pos = text.upper().rfind("ТЕХНИЧЕСКАЯ СПЕЦИФИКАЦИЯ")
-    if pos >= 0:
-        return text[pos:]
+    # TEST10L fix: find the exact Russian section heading on its own line.
+    # Do NOT use rfind(), because the phrase can occur later inside body text
+    # (for example, "Настоящая техническая спецификация ..."), which would
+    # cut off the real header containing the lot number.
+    m = re.search(
+        r"(?mi)^[ \t]*ТЕХНИЧЕСКАЯ СПЕЦИФИКАЦИЯ[ \t]*$",
+        text,
+    )
+    if m:
+        return text[m.start():]
     return text
 
 
