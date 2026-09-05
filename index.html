@@ -66,6 +66,7 @@ td:first-child{border-left:1px solid #edf0f5;border-radius:11px 0 0 11px}td:last
 
 </style>
 <!-- TEST10N: user-friendly Samruk error messages -->
+<!-- TEST10O: guard against multiple Samruk tabs -->
 </head>
 <body>
 <div class="app">
@@ -410,6 +411,11 @@ async function updateSamruk(){
    if(/Failed to fetch|NetworkError|Load failed/i.test(msg)){
      showSamrukResult(
        "Обновление Samruk сейчас не запущено. Откройте ярлык «Aidar Tenders — обновление Samruk» и повторите.",
+       "bad"
+     );
+   }else if(/Открыто несколько вкладок Samruk/i.test(msg)){
+     showSamrukResult(
+       "Открыто несколько вкладок Samruk. Оставьте одну вкладку с нужным поиском и повторите обновление.",
        "bad"
      );
    }else if(
